@@ -1,6 +1,9 @@
-const AWS    = require('aws-sdk'),
-debug        = require('debug')('monkeykiller');
-const region = 'us-west-1';
+const AWS = require('aws-sdk'),
+  debug = require('debug')('monkeykiller'),
+  SlackWebhook = require('slack-webhook');
+const region = 'us-west-1',
+  webhookUrl = process.env.SLACK_WEBHOOK_URL,
+  slackChannel = process.env.SLACK_WEBHOOK_CHANNEL || '#general';
 
 const ec2 = new AWS.EC2({
   region
@@ -38,6 +41,9 @@ exports.handler = (event, context, callback) => {
     .describeInstances(params)
     .promise()
     .then((instances) => {
+      if(!instances || instances.Reservations.length===0){
+        return Promise.resolve(null);
+      }
       const foundInstance = instances.Reservations[0].Instances[0];
       debug(`Instance found: ${foundInstance.InstanceId}`);
 
@@ -61,7 +67,22 @@ exports.handler = (event, context, callback) => {
         const terminateParams = {
           InstanceIds: [instance.InstanceId],
         };
-        ec2.terminateInstances(terminateParams, callback);
+        return ec2.terminateInstances(terminateParams).promise();
       }
-    });
+      return Promise.resolve(null)
+    }).then((termination) => {
+      if (termination) {
+        const message = {
+          "username": "MonkeyKiller",
+          "icon_url": "http://www.designdazzling.com/wp-content/uploads/2013/02/cartoon-tuts-3031.jpg",
+          "text": `I terminated the ${TAG_TO_KILL} instance.`
+        };
+        const slack = new SlackWebhook(webhookUrl);
+
+        return slack
+          .send(message);
+      }
+      return Promise.resolve(null)
+
+    }).then(()=>{callback(null)});
 };
