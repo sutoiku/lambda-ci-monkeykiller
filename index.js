@@ -75,7 +75,8 @@ exports.handler = (event, context, callback) => {
         const message = {
           "username": "MonkeyKiller",
           "icon_url": "http://www.designdazzling.com/wp-content/uploads/2013/02/cartoon-tuts-3031.jpg",
-          "text": `I terminated the ${TAG_TO_KILL} instance.`
+          "text": `I terminated the ${TAG_TO_KILL} instance.`,
+          "channel": slackChannel
         };
         const slack = new SlackWebhook(webhookUrl);
 
