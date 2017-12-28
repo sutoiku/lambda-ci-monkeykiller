@@ -71,7 +71,7 @@ exports.handler = (event, context, callback) => {
       }
       return Promise.resolve(null)
     }).then((termination) => {
-      if (termination) {
+      if (termination && webhookUrl) {
         const message = {
           "username": "MonkeyKiller",
           "icon_url": "http://www.designdazzling.com/wp-content/uploads/2013/02/cartoon-tuts-3031.jpg",
